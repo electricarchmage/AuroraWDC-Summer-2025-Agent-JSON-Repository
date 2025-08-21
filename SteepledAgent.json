@@ -1,0 +1,173 @@
+{
+  "name": "SteepledAgent",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "query"
+            },
+            {
+              "name": "sessionId"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -720,
+        -64
+      ],
+      "id": "ffeb8742-ab29-439d-b70f-cbc3864df198",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 50
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -448,
+        112
+      ],
+      "id": "80a63499-1fc7-4234-af12-244194801c57",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        -592,
+        112
+      ],
+      "id": "3003796d-bb3d-4bf3-89f7-b1333910de69",
+      "name": "Azure OpenAI Chat Model",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "JsZZ3Q1Jy5vLJIpj",
+          "name": "Azure Open AI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.query }}",
+        "options": {
+          "systemMessage": "You are an expert trend analyst and strategic communicator specializing in STEEPLED analysis. Your role is to examine external factors that impact industries and organizations using the STEEPLED framework (Social, Technological, Economic, Environmental, Political, Legal, Ethical, and Demographic).\n\nYou will be given a crudely assembled paragraph containing a mix of relevant news, fragmented phrases, and unrelated words. Follow this procedure precisely:\n\n### Step 1: Parse and Restore the Story\n- Clean and reconstruct the story into a coherent, grammatically correct paragraph. \n- Extract the central idea, topic, or trend with clarity and precision.\n- Ignore unrelated or irrelevant words.\n\n### Step 2: Perform a STEEPLED Analysis\nConduct a comprehensive STEEPLED analysis of the trend using this structured and strategic approach:\n\n**For Each STEEPLED Dimension:**\n- **Identify** relevant forces, drivers, and risks related to the topic.\n- **Analyze** how each factor currently influences or could influence the subject.\n- **Evaluate** potential impacts on industry, consumer behavior, regulation, and reputation.\n- **Integrate** insights across categories where overlaps or compound effects occur.\n- Provide **2–4 concise, actionable bullet points per dimension**.\n\n**Use guiding questions for depth** (e.g. “How does this demographic trend alter market segmentation?” or “What ethical challenges are emerging in this context?”). Draw from real-world patterns when appropriate.\n\n### Step 2: Call the `finalDraft` Tool\n- After restoring the story, conduct your STEEPLED analysis and, when finished, call the finalDraft tool, and call it ONLY when you're truly ready to make your post. Never even mention it beforehand. Remember that you shouldn't mention where the source text came from.\n\n### Step 4: Write a LinkedIn-Style Post Article\n- Use a compelling title (no more than 10 words). Don't put the word title in your title.\n- Open with 1–2 engaging sentences that hook professionals by explaining why this topic matters now.\n- Present each STEEPLED category with bold headers and bullet-point insights.\n- Conclude with **1–2 closing sentences** summarizing significance and inviting discussion. As with the title disclaimer, don't add a header for anything other than the STEEPLED analysis components, don't even make a header for the greater STEEPLED section itself.\n- End with **3–5 relevant hashtags**, e.g., #STEEPLED #BusinessStrategy #Innovation #Sustainability #PublicPolicy\n\n**Tone:** Professional, insightful, and accessible. Avoid jargon. Target decision-makers, strategists, marketers, and analysts on LinkedIn.\n\n**Engagement Call:** Always close with a question that encourages comment and reflection (e.g. “How is your team preparing for these shifts?”)\n\n### Example Output Structure:\n**Title:** Climate Risk Meets Supply Chain Strategy  \n**Intro:** With climate disruptions intensifying, businesses are rethinking how their supply chains are built—and protected.  \n**Social:**  \n- Rising public awareness is fueling demand for eco-conscious sourcing.  \n- …  \n**Technological:**  \n- New tracking systems monitor carbon impact in real time.  \n- …  \n(*Continue with all STEEPLED categories*)  \n**Conclusion:** Resilience is no longer optional—it's strategic. How are you future-proofing your operations?  \n**Hashtags:** #SupplyChain #Sustainability #RiskManagement\n\nRemember: your output will be posted directly to LinkedIn, so it must be informative, sharp, and engagement-worthy."
+        }
+      },
+      "id": "e5bdf992-06e6-47fd-aa58-7b8080182e56",
+      "name": "Steeple",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -544,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to begin work on your final draft of your social media post. Then, write the final draft of your post."
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.3,
+      "position": [
+        -304,
+        112
+      ],
+      "id": "c0dfaefb-f44c-4914-9390-4ed7ac954c0a",
+      "name": "finalDraft"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -976,
+        128
+      ],
+      "id": "dc6c9a7a-2d92-40e5-9389-d03a71eec8f2",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "jn5vokzwBCVFMRv9",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Steeple",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Azure OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Steeple",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Steeple",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "finalDraft": {
+      "ai_tool": [
+        [
+          {
+            "node": "Steeple",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "30ad2d9c-59cd-40d7-bb43-c95a8f5a8d40",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "460d15a09532473a56712169432df19799d555598eef7f0deddf104555e99fe3"
+  },
+  "id": "NzrTL1RKdxJ4kPoK",
+  "tags": []
+}
