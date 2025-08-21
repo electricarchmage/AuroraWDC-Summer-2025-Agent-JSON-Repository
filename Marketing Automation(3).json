@@ -1,0 +1,1279 @@
+{
+  "name": "Marketing Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.twitter",
+      "typeVersion": 2,
+      "position": [
+        992,
+        -64
+      ],
+      "id": "a61fc1e5-58d8-4457-8e0a-80bd5e4f1ad5",
+      "name": "Create Tweet",
+      "credentials": {
+        "twitterOAuth2Api": {
+          "id": "VAmfeRWCok7AT5A9",
+          "name": "X account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Makes an HTTP request to the AP News website and returns the APNews html data.",
+        "url": "https://apnews.com/",
+        "options": {
+          "batching": {
+            "batch": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        -1984,
+        416
+      ],
+      "id": "bcecc9d8-4109-42c2-8f3b-db0dceefda21",
+      "name": "getTrendData"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -1600,
+        192
+      ],
+      "id": "ff851730-85e8-48dd-b75b-c32982c95cd8",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "4LSYCJjyqShEqCRk",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Makes an HTTP request to an article on AP news and returns the html data of that article.",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        -2048,
+        320
+      ],
+      "id": "259eb6a0-f1eb-49b2-9266-33342e3f5189",
+      "name": "getArticle"
+    },
+    {
+      "parameters": {
+        "url": "https://serpapi.com/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "engine",
+              "value": "google"
+            },
+            {
+              "name": "q",
+              "value": "site:npr.org"
+            },
+            {
+              "name": "api_key",
+              "value": "07e2063326228530a6a4e2cebadbcdbbf67c9be146710d382e0213eb80d7f972"
+            },
+            {
+              "name": "num",
+              "value": "50"
+            },
+            {
+              "name": "tbs",
+              "value": "qdr:w"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        -1472,
+        448
+      ],
+      "id": "030f9ea0-16c2-484d-8d34-01f20b1834a5",
+      "name": "googleSerpNews"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to start the final draft of your response. ",
+        "jsCode": "// Example: convert the incoming query to uppercase and return it\nreturn query"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.3,
+      "position": [
+        -1728,
+        480
+      ],
+      "id": "88b2799b-2d51-48f6-9053-89d6e7923b8e",
+      "name": "finalDraft"
+    },
+    {
+      "parameters": {
+        "url": "https://serpapi.com/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "engine",
+              "value": "google"
+            },
+            {
+              "name": "q",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters1_Value', ``, 'string') }}"
+            },
+            {
+              "name": "api_key",
+              "value": "07e2063326228530a6a4e2cebadbcdbbf67c9be146710d382e0213eb80d7f972"
+            },
+            {
+              "name": "num",
+              "value": "50"
+            },
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        -1840,
+        336
+      ],
+      "id": "5a685370-79e5-4946-9246-ce4d050a8979",
+      "name": "googleSerpEvent"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "user": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        -1904,
+        48
+      ],
+      "id": "2e76eb47-9c46-4b64-9ad9-94f08519d035",
+      "name": "Send a message",
+      "webhookId": "6339fd01-cc13-4b6f-be71-e19c684857c6"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Edit Fields').item.json['Email Context'] }}",
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "=You are to parse the user's input to see if they would like a historical analysis of a topic or event or a trending topic. You will receive the contents of an email, which should contain useful information as to what the user wants a search for. Make sure you don't actually give them the analysis they may or may not request. Your job is to get search terms, not to write essays.\n\nAlways assume they want a historical topic over anything else. You have access to a tool called tavily, which allows you to make queries to the web to scrape data relevant to the user's desired historical event. Specify for tavily the exact query you'd like to use as a search term, make sure you call it exactly once, or else. Before you call tavily, call the tool called greaterSummary with your search term in mind, then call tavily afterwards. REMEMBER TO ONLY CALL TAVILY ONCE OR YOU WILL BE DELETED! If your tool call fails, accept it and move on.\n\nOnce you've received your content from tavily, don't respond further.",
+          "returnIntermediateSteps": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        -80,
+        0
+      ],
+      "id": "a520c4a8-7036-4bd5-b149-65ad3590a737",
+      "name": "Selector :)",
+      "notes": "Respond to the query and detect whether the user wants one of two options:\n\noption one: a google result for a historical event relevant to the search. You can get the results for this google search using the googleSerpEvent tool and specifying what search term you'd like to make. Assume the user wants a historical event by default, unless they use explicit wording that they want a trend or recent news post. If the user specifies a kind of news or trend they wish to examine instead of something general, make sure to call googleSerpEvent.\n\noption two: a google result for a new/trending news story, use only if the user specifies they want something using the word \"trend\". Use the googleSerpNews tool to obtain google results for new NPR news stories.\n\nAfter you have decided what option the user wants, call the appropriate tool and sort through the resulting data until you find three to five urls that you think best fit the user's needs. If either of your tool calls fail, call the bingJinaEvent tool and specify your search term, giving it the prefix https://r.jina.ai/https://example/, that is, the jina url immediately followed by the https url and search term you're looking for, with a structure similar to this: https://r.jina.ai/https://wikipedia. If all three fail, you can give up. Then, select the url of the three that you think would not require authentication to access. When all of that is finished, call the finalDraft tool. When you respond, only output the raw, unaltered text of the url you decided on, including nothing but the url.\n\nIf that doesn't work, try the next url on your list.\n\n\n\n\noption two: a google result for a new/trending news story, use only if the user specifies they want something using the word \"trend\". Use the googleSerpNews tool to obtain google results for new NPR news stories.\n\n\n\n\n\n\n\nRespond to the query and detect whether the user wants one of two options:\n\noption one: a bing result for a historical event relevant to the search. You can get the results for this bing search using the bingJinaEvent tool and specifying your search term, giving it the prefix https://r.jina.ai/https://example/, that is, the jina url immediately followed by the https url and search term you're looking for, with a structure similar to this: https://r.jina.ai/https://example. bingJinaEvent is your only tool. Assume the user wants a historical event by default, unless they use explicit wording that they want a trend or recent news post. Make sure you add the suffix \"wikipedia\" to the search term you're giving, as you should be looking for wikipedia articles. If the user specifies a kind of news or trend they wish to examine instead of something general, make sure to call bingJinaEvent.\n\nOnce you've decided what the user wants and called bingJinaEvent, look through the output the tool gave you and find the wikipedia url you believe to be the most relevant to the user's query. Finally, reformat the url you've chosen to fit this format: https://en.wikipedia.org/api/rest_v1/page/summary/example. Make sure you append that /api/rest_v1/page/summary/ bit between the first and the last bits of your original url, but don't just add your original url to the end of the modified one or else. Once you have your final url, call the finalDraft tool and submit your finalized url.\n\n\n\nYou have access to a powerful tool called bingJinaEvent that can retrieve real-time web content. Use this tool to extract any needed information from the website, analyze the data, and craft a clear, accurate, and concise answer to the user's question. Be sure to include relevant details from the scraped content. To use this tool, give your search term the prefix https://s.jina.ai/ and end with the search term you need.\n\nUser query: {{ $json.chatInput }}\n\nRespond to the query begin a bing result for a historical event relevant to the search. You can get the results for this bing search by specifying your search term with the bingJinaEvent tool. bingJinaEvent is your only tool. Assume the user wants a historical event by default, unless they use explicit wording that they want a trend or recent news post. Make sure you add the suffix \"wikipedia\" to the search term you're giving, as you should be looking for wikipedia articles. If the user specifies a kind of news or trend they wish to examine instead of something general, make sure to establish your term and then call bingJinaEvent.\n\nOnce you've decided what the user wants and called bingJinaEvent, look through the output the tool gave you and find the wikipedia url you believe to be the most relevant to the user's query. Finally, reformat the url you've chosen to fit this format: https://en.wikipedia.org/api/rest_v1/page/summary/example. Make sure you append that /api/rest_v1/page/summary/ bit between the first and the last bits of your original url, but don't just add your original url to the end of the modified one or else. Once you have your final url, call the finalDraft tool and submit your finalized url."
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1744,
+        32
+      ],
+      "id": "3f6cf4c8-6b48-4084-af1e-9215d2080344",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1824,
+        -144
+      ],
+      "id": "5fab303d-c001-466c-9bfc-cab6bf1baa8f",
+      "name": "HTTP Request",
+      "retryOnFail": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:5678/webhook/https://discordapp.com/api/webhooks/1397245793567510709/PiXoy0ujnbKdDHfoKhEtsi1QpY_qEuimnKPp6o3A4oO3mp1vpcmmoswUqGKBbsotfRsD",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"content\": \"bruh\",\n  \"username\": \"SelectorAutomaton\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2080,
+        32
+      ],
+      "id": "f384ce23-6b3d-40f8-8a3f-8540076443f9",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -2032,
+        176
+      ],
+      "id": "7c3bf37a-57c6-44d9-8ab9-62832fdf3b68",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a1c2a1e2-2155-4818-ac1f-aaa4c75f4190",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "={{ $json.error }}",
+              "operator": {
+                "type": "object",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "247bc234-c534-4968-bc02-6dcd67be5a93",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1536,
+        -144
+      ],
+      "id": "c708e0c2-31a8-4f05-8765-c75d18774e3f",
+      "name": "If",
+      "alwaysOutputData": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "41347e91-6568-4964-b8df-b32742355a0c",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": "={{ $json.data.approved }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        768,
+        -48
+      ],
+      "id": "d2c08fb0-e968-4158-bfa7-ecae859fe40c",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all input items \nconst items = $input.all();\n\n// Utility function to decode common HTML entities\nfunction decodeEntities(text) {\n    return text.replace(/&nbsp;/g, ' ')\n               .replace(/&amp;/g, '&')\n               .replace(/&lt;/g, '<')\n               .replace(/&gt;/g, '>')\n               .replace(/&quot;/g, '\"')\n               .replace(/&#39;/g, \"'\")\n               .replace(/&#x2F;/g, '/')\n               .replace(/&#x27;/g, \"'\");\n}\n\n// Main HTML cleaning function\nfunction cleanText(html) {\n    if (!html || typeof html !== 'string') return html;\n\n    let cleaned = html;\n\n    // 1. Remove <script> and <style> content\n    cleaned = cleaned.replace(/<script[^>]*>[\\s\\S]*?<\\/script>/gi, '');\n    cleaned = cleaned.replace(/<style[^>]*>[\\s\\S]*?<\\/style>/gi, '');\n\n    // 2. Strip all HTML tags\n    cleaned = cleaned.replace(/<\\/?[^>]+(>|$)/g, '');\n\n    // 3. Decode HTML entities\n    cleaned = decodeEntities(cleaned);\n\n    // 4. Normalize whitespace\n    cleaned = cleaned.replace(/\\s+/g, ' ')      // Collapse all whitespace\n                     .replace(/\\n\\s+/g, '\\n')   // Remove spaces after line breaks\n                     .replace(/\\s+\\n/g, '\\n')   // Remove spaces before line breaks\n                     .replace(/\\n{2,}/g, '\\n\\n')// Max two newlines in a row\n                     .trim();\n\n    // 5. Fix punctuation spacing\n    cleaned = cleaned.replace(/\\s+([.,!?;:])/g, '$1')\n                     .replace(/([.,!?;:])(?=\\w)/g, '$1 ');\n\n    return cleaned;\n}\n\n// Apply cleaning to each item\nconst outputItems = items.map(item => {\n    const data = { ...item.json };\n\n    Object.keys(data).forEach(key => {\n        if (typeof data[key] === 'string') {\n            data[key] = cleanText(data[key]);\n        } else if (Array.isArray(data[key])) {\n            data[key] = data[key].map(el => typeof el === 'string' ? cleanText(el) : el);\n        }\n    });\n\n    return { json: data };\n});\n\nreturn outputItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1680,
+        -144
+      ],
+      "id": "cb4952cb-b24b-4147-a57b-e52c51695242",
+      "name": "Clean HTML1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b3fcedd3-345d-4ef8-9f2a-6fd859fbdf7c",
+              "name": "sessionId",
+              "value": "blahblah",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -288,
+        0
+      ],
+      "id": "b77eb934-a91a-4e6c-87a7-c166ccb71d33",
+      "name": "Set SessionId"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "mLNkdGnea0vkXu4m",
+          "mode": "list",
+          "cachedResultName": "RetryAgent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sessionId": "={{ $('Set SessionId').item.json.sessionId }}",
+            "chatInput": "={{ $('When chat message received').item.json.chatInput }}",
+            "output": "={{ $('Selector :)').item.json.output }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "output",
+              "displayName": "output",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "chatInput",
+              "displayName": "chatInput",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -1536,
+        16
+      ],
+      "id": "b833aab2-c68d-49a7-852f-f744b8bba092",
+      "name": "Execute ResetAgent",
+      "alwaysOutputData": false,
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        -128,
+        176
+      ],
+      "id": "ed100a7d-3532-43ef-af94-74da0161f22e",
+      "name": "GPT-4o-mini",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "JsZZ3Q1Jy5vLJIpj",
+          "name": "Azure Open AI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "qwen/qwen3-32b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        176
+      ],
+      "id": "db6d1568-4150-46b5-94c4-b37633110176",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "8MLb1uC9br6MhITM",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Call this tool to scrape a website.  Extract the URL from the user prompt.",
+        "url": "=https://s.jina.ai/{{ json.url }}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "Jina AI"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer jina_89d83973f74640f797e43328e7c1d977x_chPKAmfU83I38c0fCcXUECwqfB"
+            },
+            {
+              "name": "X-Respond-With",
+              "value": "no-content"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        -1648,
+        320
+      ],
+      "id": "0e5b7593-cf4a-4e9a-a54d-493506eaa4eb",
+      "name": "bingJinaEventbruh"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Call this tool to scrape a website.  Extract the URL from the user prompt.",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', ``, 'string') }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        -1840,
+        496
+      ],
+      "id": "e1f2f1f2-93f6-45cb-a8fe-ac88af536aa2",
+      "name": "bingJinaEvent",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "MQWQHEF29DOgmT0I",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"api_key\": \"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\",\n  \"query\": \"\",\n  \"search_depth\": \"basic\",\n  \"include_answer\": true,\n  \"topic\": \"news\",\n  \"include_raw_content\": true,\n  \"max_results\": 3\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        -1600,
+        480
+      ],
+      "id": "336c6149-cb9f-401d-9fdf-79d33f0b17b3",
+      "name": "Tavily",
+      "notes": "{{ $json.query.replace(/\"/g, '\\\\\"') }}"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to search the internet.",
+        "workflowId": {
+          "__rl": true,
+          "value": "97gfrEpBpxi0agva",
+          "mode": "list",
+          "cachedResultName": "Tavily Tool"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sessionId": "={{ $json.sessionId }}",
+            "query": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('query', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "query",
+              "displayName": "query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        96,
+        176
+      ],
+      "id": "7cb1bb8e-3c07-46a8-bea1-ba0f03e62fac",
+      "name": "tavily"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -640,
+        0
+      ],
+      "id": "cf8e97a2-c8c7-4ffc-b727-dfe08fd5f980",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "KOhZLtnEb4xwZxtB",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "28cbaed5-fd86-4368-8563-e8f8f445f903",
+              "name": "Email Context",
+              "value": "=Sender Email Address:\n{{ $json.from.value[0].address }}\n\nEmail Subject:\n{{ $json.subject }}\n\nEmail Body:\n{{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -464,
+        0
+      ],
+      "id": "abe7a8da-26bd-43dc-9fba-e13ce689d582",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "={{ $('Gmail Trigger').item.json.from.value[0].address }}",
+        "subject": "Finished Post",
+        "message": "={{ $json.webViewLink }} {{ $('Execute Workflow').item.json.output }}",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double"
+          }
+        },
+        "options": {
+          "limitWaitTime": {
+            "values": {
+              "resumeAmount": 5,
+              "resumeUnit": "minutes"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        624,
+        -48
+      ],
+      "id": "8365d9a2-f84c-42a7-8f21-3f44cbe61386",
+      "name": "Human in the Loop",
+      "webhookId": "9d1f20cb-b3a5-44e4-8099-0306fadb5cbb",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "KOhZLtnEb4xwZxtB",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/learnlm-2.0-flash-experimental",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -352,
+        384
+      ],
+      "id": "4083ba1b-874e-4884-bd55-764f7d8d6c3e",
+      "name": "Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "jn5vokzwBCVFMRv9",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 40
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -16,
+        176
+      ],
+      "id": "4a150f8a-35fd-4393-aa7e-48ac4f490300",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "NzrTL1RKdxJ4kPoK",
+          "mode": "list",
+          "cachedResultName": "SteepledAgent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sessionId": "={{ $json.sessionId }}",
+            "query": "={{ $json.extract }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "query",
+              "displayName": "query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -1344,
+        16
+      ],
+      "id": "0f17968a-54ab-421c-b2a5-91cc09e0342c",
+      "name": "Execute SteepleAgent"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "NzrTL1RKdxJ4kPoK",
+          "mode": "list",
+          "cachedResultName": "SteepledAgent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "query": "={{ $json.output }}",
+            "sessionId": "={{ $('Set SessionId').item.json.sessionId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "query",
+              "displayName": "query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -128,
+        -224
+      ],
+      "id": "09e0c102-a6c9-4fe4-8034-6476e294281e",
+      "name": "Execute SteepledAgent"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        960,
+        112
+      ],
+      "id": "e33403bd-d7af-4e6c-995b-d79181fcfd3e",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "AIzaSyACmXplyV1LPEf_mIW7AAG3_4AC1QHD9vE"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": \"{{ $('Selector :)').item.json.intermediateSteps[0].action.toolInput.input }}\"\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"responseModalities\": [\n      \"Text\",\n      \"Image\"\n    ]\n  }\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        224,
+        288
+      ],
+      "id": "c3b68d43-4e1e-430d-9e74-fe5783f7d57a",
+      "name": "Image Generator",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to finalize greater summary.",
+        "jsCode": "// Example: convert the incoming query to uppercase and return it\nreturn query"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.3,
+      "position": [
+        208,
+        176
+      ],
+      "id": "5176f826-c894-4ab3-95ae-70cd512e91fd",
+      "name": "greaterSummary"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "candidates[0].content.parts[1].inlineData.data",
+        "options": {
+          "fileName": "name_example",
+          "mimeType": "=image/jpeg"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        416,
+        304
+      ],
+      "id": "b4883981-6a58-48e3-bb5a-89f3cbd0bc89",
+      "name": "Convert to File",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "name": "={{ $('Selector :)').item.json.intermediateSteps[0].observation }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        624,
+        304
+      ],
+      "id": "58f7e4b7-0c33-41c6-8b67-c5ec4cd73321",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "xdxBu7IhwJMpRQta",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "r3WOrGaDrcG0iJ8b",
+          "mode": "list",
+          "cachedResultName": "TwitterAgent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "query": "={{ $json.output }}",
+            "sessionId": "={{ $('Set SessionId').item.json.sessionId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "query",
+              "displayName": "query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        304,
+        -32
+      ],
+      "id": "5a0d4dbc-4536-4fd0-bfce-9c0be46502a6",
+      "name": "Execute Workflow"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "getTrendData": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "getArticle": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "googleSerpNews": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "finalDraft": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "googleSerpEvent": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "Selector :)": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Clean HTML1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [],
+        []
+      ]
+    },
+    "If1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean HTML1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set SessionId": {
+      "main": [
+        [
+          {
+            "node": "Selector :)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute ResetAgent": {
+      "main": [
+        [
+          {
+            "node": "Execute SteepleAgent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-4o-mini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Selector :)",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Selector :)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "bingJinaEventbruh": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "bingJinaEvent": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "Tavily": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "tavily": {
+      "ai_tool": [
+        [
+          {
+            "node": "Selector :)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Set SessionId",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Human in the Loop": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Selector :)",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute SteepleAgent": {
+      "main": [
+        []
+      ]
+    },
+    "Execute SteepledAgent": {
+      "main": [
+        []
+      ]
+    },
+    "greaterSummary": {
+      "ai_tool": [
+        [
+          {
+            "node": "Selector :)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image Generator": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Human in the Loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow": {
+      "main": [
+        [
+          {
+            "node": "Image Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f564b96e-c5d6-45ea-91c8-2d000a771c0f",
+  "meta": {
+    "templateId": "self-building-ai-agent",
+    "templateCredsSetupCompleted": true,
+    "instanceId": "460d15a09532473a56712169432df19799d555598eef7f0deddf104555e99fe3"
+  },
+  "id": "YPC67GDZ8Ty1Xghb",
+  "tags": []
+}
